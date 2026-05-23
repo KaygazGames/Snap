@@ -1,36 +1,45 @@
 #include "src/AppConfig.h"
 #include "src/SettingsManager.h"
 #include "src/SdStorage.h"
-#include "src/MetadataStore.h"
-#include "src/FlashController.h"
 #include "src/CameraManager.h"
 #include "src/CaptureService.h"
-#include "src/BleServerManager.h"
+#include "src/WebServerManager.h"
 
 SettingsManager settings;
 SdStorage storage;
-MetadataStore metadata;
-FlashController flash;
 CameraManager camera;
-CaptureService captureService;
-BleServerManager ble;
+CaptureService capture;
+WebServerManager web;
 
 void setup() {
   Serial.begin(115200);
-  pinMode(PIN_SHUTTER_BUTTON, INPUT_PULLUP);
+  delay(200);
 
   settings.begin();
-  flash.begin(PIN_FLASH_LED, settings);
   storage.begin();
-  metadata.begin(storage);
   camera.begin(settings);
-  captureService.begin(settings, storage, metadata, camera, flash, PIN_SHUTTER_BUTTON);
-  ble.begin(settings, storage, metadata, flash, camera, captureService);
+  capture.begin(settings, storage, camera);
 
-  Serial.println("HybridCam ESP32 started");
+  pinMode(PIN_BOOT_BUTTON, INPUT_PULLUP);
+  uint32_t t0 = millis();
+  bool syncMode = false;
+  while (millis() - t0 < 3000) {
+    if (digitalRead(PIN_BOOT_BUTTON) == LOW) {
+      syncMode = true;
+      break;
+    }
+    delay(10);
+  }
+
+  if (syncMode) {
+    web.begin(settings, storage, capture);
+    Serial.println("Sync mode enabled (AP + mDNS camera.local)");
+  } else {
+    Serial.println("Capture-only mode (Wi-Fi disabled)");
+  }
 }
 
 void loop() {
-  captureService.loop();
-  ble.loop();
+  capture.loop();
+  web.loop();
 }

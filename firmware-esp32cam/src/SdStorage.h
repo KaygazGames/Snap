@@ -1,18 +1,15 @@
 #pragma once
 #include <Arduino.h>
-#include <FS.h>
 #include <SD_MMC.h>
 
 class SdStorage {
 public:
   bool begin();
-  bool writeBytes(const String& path, const uint8_t* data, size_t len);
-  bool renameFile(const String& from, const String& to);
-  bool exists(const String& path);
-  String readText(const String& path);
-  bool writeText(const String& path, const String& content);
+  bool savePhotoAtomic(uint32_t id, const uint8_t* data, size_t len, String& finalPath);
+  String readAll(const String& path);
   bool appendLine(const String& path, const String& line);
+  bool writeText(const String& path, const String& text);
+  uint32_t loadLastId();
+  bool saveLastId(uint32_t id);
   File openRead(const String& path);
-  uint64_t cardSize();
-  uint64_t usedBytes();
 };

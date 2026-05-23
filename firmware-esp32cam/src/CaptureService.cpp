@@ -1,56 +1,33 @@
 #include "CaptureService.h"
-#include "HashUtils.h"
+#include "AppConfig.h"
 
-void CaptureService::begin(SettingsManager& s, SdStorage& st, MetadataStore& m, CameraManager& c, FlashController& f, uint8_t buttonPin) {
-  settings=&s; storage=&st; metadata=&m; camera=&c; flash=&f; pin=buttonPin;
-  pinMode(pin, INPUT_PULLUP);
+void CaptureService::begin(SettingsManager& s, SdStorage& st, CameraManager& c) {
+  settings = &s; storage = &st; camera = &c;
+  if (!storage->openRead(META_FILE)) storage->writeText(META_FILE, "id,filename,size,timestamp\n");
+  lastId = storage->loadLastId();
 }
 
-bool CaptureService::shouldCapture() {
-  bool reading = digitalRead(pin);
-  if (reading != prevState) lastDebounceMs = millis();
-  if ((millis() - lastDebounceMs) > 40 && prevState == HIGH && reading == LOW) {
-    prevState = reading;
-    return true;
-  }
-  prevState = reading;
-  return false;
-}
-
-bool CaptureService::capture() {
-  uint32_t id = metadata->nextIdAtomic();
-  char tmpName[32], finalName[32];
-  snprintf(tmpName, sizeof(tmpName), "/TMP_%06lu.jpg", (unsigned long)id);
-  snprintf(finalName, sizeof(finalName), "/IMG_%06lu.jpg", (unsigned long)id);
-
-  camera_fb_t* fb = camera->captureWarmupAndGetFrame();
+bool CaptureService::snapNow(String& outPath, uint32_t& outId) {
+  uint32_t id = lastId + 1;
+  camera_fb_t* fb = camera->capture();
   if (!fb || fb->len < 1000) { camera->release(fb); return false; }
-
-  if (flash->shouldAutoFire(camera->estimateLuma(fb->buf, fb->len))) {
-    flash->pulseForCapture();
-    camera->release(fb);
-    fb = camera->captureWarmupAndGetFrame();
-    if (!fb) return false;
-  }
-
-  if (!storage->writeBytes(tmpName, fb->buf, fb->len)) { camera->release(fb); return false; }
-
-  String sha = HashUtils::sha256File(tmpName);
-  if (sha.length() != 64) {
-    camera->release(fb);
-    return false;
-  }
-
-  if (!storage->renameFile(tmpName, finalName)) { camera->release(fb); return false; }
-
-  PhotoMeta m{ id, String(finalName), sha, (uint32_t)fb->len, String(millis()) };
-  bool metaOk = metadata->append(m);
+  String path;
+  if (!storage->savePhotoAtomic(id, fb->buf, fb->len, path)) { camera->release(fb); return false; }
+  String line = String(id)+","+path+","+String((uint32_t)fb->len)+","+String((uint32_t)millis());
+  if (!storage->appendLine(META_FILE, line)) { camera->release(fb); return false; }
+  if (!storage->saveLastId(id)) { camera->release(fb); return false; }
   camera->release(fb);
-  return metaOk;
+  lastId = id;
+  outPath = path;
+  outId = id;
+  return true;
 }
-
-bool CaptureService::triggerCapture() { return capture(); }
 
 void CaptureService::loop() {
-  if (shouldCapture()) capture();
+  // runtime shutter only outside sync window; simple debounce
+  if (digitalRead(PIN_BOOT_BUTTON) == LOW && millis() - lastPress > 500) {
+    lastPress = millis();
+    String p; uint32_t id;
+    snapNow(p, id);
+  }
 }

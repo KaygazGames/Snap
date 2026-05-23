@@ -1,18 +1,14 @@
 #pragma once
-
 #include <Arduino.h>
 
-#define FW_VERSION "1.2.0"
+#define FW_VERSION "2.0.0"
+#define PIN_BOOT_BUTTON 0
 
-// IMPORTANT:
-// AI Thinker ESP32-CAM uses GPIO0 for camera XCLK, so onboard BOOT key cannot be used
-// as a runtime shutter input while camera is active. Keep BLE capture as primary trigger.
-#define PIN_SHUTTER_BUTTON 12   // optional external shutter button
-#define PIN_FLASH_LED 4
+#define AP_SSID "HybridCam"
+#define AP_PASS "hybridcam123"
+#define AP_IP IPAddress(192,168,4,1)
+#define AP_GW IPAddress(192,168,4,1)
+#define AP_MASK IPAddress(255,255,255,0)
 
 #define META_FILE "/meta.csv"
 #define LAST_ID_FILE "/last_id.txt"
-
-#define DEFAULT_BLE_NAME "HybridCam-ESP32"
-#define BLE_MTU_TARGET 247
-#define DEFAULT_CHUNK_SIZE 180

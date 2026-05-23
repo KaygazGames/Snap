@@ -5,9 +5,6 @@
 class CameraManager {
 public:
   bool begin(SettingsManager& settings);
-  camera_fb_t* captureWarmupAndGetFrame();
+  camera_fb_t* capture();
   void release(camera_fb_t* fb);
-  uint8_t estimateLuma(const uint8_t* data, size_t len) const;
-private:
-  SettingsManager* settings {nullptr};
 };

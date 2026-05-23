@@ -2,24 +2,18 @@
 #include <Arduino.h>
 #include "SettingsManager.h"
 #include "SdStorage.h"
-#include "MetadataStore.h"
 #include "CameraManager.h"
-#include "FlashController.h"
 
 class CaptureService {
 public:
-  void begin(SettingsManager& settings, SdStorage& storage, MetadataStore& metadata, CameraManager& camera, FlashController& flash, uint8_t buttonPin);
+  void begin(SettingsManager& settings, SdStorage& storage, CameraManager& camera);
   void loop();
-  bool triggerCapture();
+  bool snapNow(String& outPath, uint32_t& outId);
+  uint32_t latestId() const { return lastId; }
 private:
-  SettingsManager* settings {nullptr};
-  SdStorage* storage {nullptr};
-  MetadataStore* metadata {nullptr};
-  CameraManager* camera {nullptr};
-  FlashController* flash {nullptr};
-  uint8_t pin {0};
-  bool prevState {HIGH};
-  uint32_t lastDebounceMs {0};
-  bool shouldCapture();
-  bool capture();
+  SettingsManager* settings{nullptr};
+  SdStorage* storage{nullptr};
+  CameraManager* camera{nullptr};
+  uint32_t lastId{0};
+  uint32_t lastPress{0};
 };
