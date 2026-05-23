@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/btnScanConnect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Scan &amp; Connect"/>
+
+    <Button
+        android:id="@+id/btnGetStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Get Status"/>
+
+    <Button
+        android:id="@+id/btnSync"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Manual Sync"/>
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Idle"
+        android:paddingTop="16dp"/>
+</LinearLayout>
