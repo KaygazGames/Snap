@@ -6,7 +6,7 @@ static NimBLECharacteristic* gRsp = nullptr;
 static CaptureService* gCapture = nullptr;
 
 class CmdCallbacks : public NimBLECharacteristicCallbacks {
-  void onWrite(NimBLECharacteristic* c) override {
+  void handleWrite(NimBLECharacteristic* c) {
     std::string v = c->getValue();
     if (v.empty()) return;
     uint8_t cmd = (uint8_t)v[0];
@@ -27,6 +27,17 @@ class CmdCallbacks : public NimBLECharacteristicCallbacks {
       gRsp->notify();
       return;
     }
+  }
+
+  // NimBLE-Arduino callback signatures vary across versions.
+  // Keep both overloads so this compiles with old/new releases.
+  void onWrite(NimBLECharacteristic* c) {
+    handleWrite(c);
+  }
+
+  void onWrite(NimBLECharacteristic* c, NimBLEConnInfo& connInfo) {
+    (void)connInfo;
+    handleWrite(c);
   }
 };
 
