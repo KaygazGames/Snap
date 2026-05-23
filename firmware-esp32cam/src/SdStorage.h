@@ -9,6 +9,8 @@ public:
   String readAll(const String& path);
   bool appendLine(const String& path, const String& line);
   bool writeText(const String& path, const String& text);
+  bool exists(const String& path);
+  String readText(const String& path);
   uint32_t loadLastId();
   bool saveLastId(uint32_t id);
   File openRead(const String& path);
